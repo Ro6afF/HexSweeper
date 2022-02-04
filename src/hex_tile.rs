@@ -2,6 +2,9 @@ use ggez::graphics;
 use ggez::graphics::Color;
 use ggez::graphics::DrawMode;
 use ggez::graphics::Mesh;
+use ggez::graphics::PxScale;
+use ggez::graphics::Text;
+use ggez::graphics::TextFragment;
 use ggez::Context;
 use ggez::GameResult;
 use glam::Vec2;
@@ -14,8 +17,8 @@ pub struct HexTile {
 }
 
 impl HexTile {
-    pub fn new(size: f32, pos: Vec2, color: Color) -> HexTile {
-        HexTile { size, pos, color }
+    pub fn new(size: f32, pos: Vec2, color: Color) -> Self {
+        Self { size, pos, color }
     }
 
     pub fn is_inside(&self, p: Vec2) -> bool {
@@ -64,9 +67,16 @@ impl HexTile {
 
         let inner = Mesh::new_polygon(ctx, DrawMode::fill(), &points, self.color)?;
         let border = Mesh::new_polygon(ctx, DrawMode::stroke(2.0), &points, Color::WHITE)?;
-
+        let txt = Text::new(TextFragment {
+            text: "1".to_string(),
+            color: Some(Color::new(1.0, 0.0, 0.0, 1.0)),
+            font: Some(graphics::Font::default()),
+            scale: Some(PxScale::from(30.0)),
+            ..Default::default()
+        });
         graphics::draw(ctx, &inner, (self.pos,))?;
         graphics::draw(ctx, &border, (self.pos,))?;
+        graphics::draw(ctx, &txt, (self.pos - Vec2::new(7.0, 15.0),))?;
         Ok(())
     }
 }
