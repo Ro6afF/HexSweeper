@@ -11,7 +11,7 @@ struct MainState {
 
 impl MainState {
     fn new() -> GameResult<MainState> {
-        let grid = HexGrid::new(12, 12);
+        let grid = HexGrid::new(10, 10);
         let s = MainState { grid };
         Ok(s)
     }

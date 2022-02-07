@@ -1,5 +1,4 @@
 use crate::hex_tile::HexTile;
-use ggez::graphics::Color;
 use ggez::Context;
 use ggez::GameResult;
 use glam::Vec2;
@@ -10,7 +9,7 @@ pub struct HexGrid {
 }
 
 impl HexGrid {
-    pub fn new(cnt_x: u16, cnt_y: u16) -> Self {
+    pub fn new(cnt_x: usize, cnt_y: usize) -> Self {
         let mut grid = vec![];
 
         for i in 0..cnt_x {
@@ -23,10 +22,21 @@ impl HexGrid {
                         j as f32 * (50.0 / 2.0 / (PI / 6.0).cos() + 50.0 / 2.0 * (PI / 6.0).tan())
                             + 33.0,
                     ),
-                    Color::BLACK,
+                    false
                 ));
             }
         }
+        
+        for _ in 0..10 {
+            loop {
+                let (x, y) = (fastrand::usize(..cnt_x), fastrand::usize(..cnt_y));
+                if !grid[x][y].mine {
+                    grid[x][y].mine = true;
+                    break;
+                }
+            }
+        }
+
         Self { grid }
     }
 
@@ -43,7 +53,7 @@ impl HexGrid {
         for i in &mut self.grid {
             for j in i {
                 if j.is_inside(pos) {
-                    j.color = Color::WHITE;
+                    j.display = Some(3);
                 }
             }
         }

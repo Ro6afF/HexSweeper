@@ -11,14 +11,20 @@ use glam::Vec2;
 use std::f32::consts::PI;
 
 pub struct HexTile {
+    pub mine: bool,
+    pub display: Option<i32>,
     pub size: f32,
     pub pos: Vec2,
-    pub color: Color,
 }
 
 impl HexTile {
-    pub fn new(size: f32, pos: Vec2, color: Color) -> Self {
-        Self { size, pos, color }
+    pub fn new(size: f32, pos: Vec2, mine: bool) -> Self {
+        Self {
+            size,
+            pos,
+            mine,
+            display: None,
+        }
     }
 
     pub fn is_inside(&self, p: Vec2) -> bool {
@@ -65,18 +71,34 @@ impl HexTile {
             )
         }
 
-        let inner = Mesh::new_polygon(ctx, DrawMode::fill(), &points, self.color)?;
+        let inner = Mesh::new_polygon(
+            ctx,
+            DrawMode::fill(),
+            &points,
+            if self.display == None {
+                Color::GREEN
+            } else {
+                Color::BLACK
+            },
+        )?;
         let border = Mesh::new_polygon(ctx, DrawMode::stroke(2.0), &points, Color::WHITE)?;
-        let txt = Text::new(TextFragment {
-            text: "1".to_string(),
-            color: Some(Color::new(1.0, 0.0, 0.0, 1.0)),
-            font: Some(graphics::Font::default()),
-            scale: Some(PxScale::from(30.0)),
-            ..Default::default()
-        });
         graphics::draw(ctx, &inner, (self.pos,))?;
         graphics::draw(ctx, &border, (self.pos,))?;
-        graphics::draw(ctx, &txt, (self.pos - Vec2::new(7.0, 15.0),))?;
+        if let Some(num) = self.display {
+            let txt = Text::new(TextFragment {
+                text: num.to_string(),
+                color: if self.mine {
+                    Some(Color::new(1.0, 0.0, 0.0, 1.0))
+                } else {
+                    Some(Color::WHITE)
+                },
+                font: Some(graphics::Font::default()),
+                scale: Some(PxScale::from(30.0)),
+                ..Default::default()
+            });
+            graphics::draw(ctx, &txt, (self.pos - Vec2::new(7.0, 15.0),))?;
+        }
+
         Ok(())
     }
 }

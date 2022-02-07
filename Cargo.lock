@@ -1040,6 +1040,7 @@ dependencies = [
 name = "hex_sweeper"
 version = "0.1.0"
 dependencies = [
+ "fastrand",
  "ggez",
  "glam",
 ]
