@@ -4,6 +4,7 @@ use ggez::GameResult;
 use glam::Vec2;
 use std::f32::consts::PI;
 
+#[derive(Clone)]
 pub struct HexGrid {
     grid: Vec<Vec<HexTile>>,
 }
@@ -22,11 +23,10 @@ impl HexGrid {
                         j as f32 * (50.0 / 2.0 / (PI / 6.0).cos() + 50.0 / 2.0 * (PI / 6.0).tan())
                             + 33.0,
                     ),
-                    false
+                    false,
                 ));
             }
         }
-        
         for _ in 0..10 {
             loop {
                 let (x, y) = (fastrand::usize(..cnt_x), fastrand::usize(..cnt_y));
@@ -50,12 +50,64 @@ impl HexGrid {
     }
 
     pub fn click(&mut self, pos: Vec2) {
+        let cl = self.clone();
+        let (mut x, mut y) = (0, 0);
         for i in &mut self.grid {
             for j in i {
                 if j.is_inside(pos) {
-                    j.display = Some(3);
+                    j.display = Some(cl.count_mines(x, y));
                 }
+                y += 1;
+            }
+            y = 0;
+            x += 1;
+        }
+    }
+
+    pub fn count_mines(&self, x: usize, y: usize) -> u8 {
+        let mut res = 0;
+
+        let size_x = self.grid.len();
+        let size_y = self.grid[0].len();
+
+        println!("{} {}", x, y);
+
+        if x > 0 {
+            res += self.grid[x - 1][y].mine as u8;
+        }
+
+        if x + 1 < size_x {
+            res += self.grid[x + 1][y].mine as u8;
+        }
+
+        if y > 0 {
+            if y % 2 == 0 {
+                if x > 0 {
+                    res += self.grid[x - 1][y - 1].mine as u8;
+                }
+                res += self.grid[x][y - 1].mine as u8;
+            } else {
+                if x + 1 < size_x {
+                    res += self.grid[x + 1][y - 1].mine as u8;
+                }
+                res += self.grid[x][y - 1].mine as u8;
             }
         }
+
+        if y + 1 < size_y {
+            if y % 2 == 0 {
+                if x > 0 {
+                    res += self.grid[x - 1][y + 1].mine as u8;
+                }
+                res += self.grid[x][y + 1].mine as u8;
+            } else {
+                if x + 1 < size_x {
+                    res += self.grid[x + 1][y + 1].mine as u8;
+                }
+                res += self.grid[x][y + 1].mine as u8;
+            }
+        }
+
+        res
     }
 }

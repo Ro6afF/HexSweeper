@@ -10,9 +10,10 @@ use ggez::GameResult;
 use glam::Vec2;
 use std::f32::consts::PI;
 
+#[derive(Clone)]
 pub struct HexTile {
     pub mine: bool,
-    pub display: Option<i32>,
+    pub display: Option<u8>,
     pub size: f32,
     pub pos: Vec2,
 }
