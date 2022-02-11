@@ -31,8 +31,12 @@ impl event::EventHandler<ggez::GameError> for MainState {
         Ok(())
     }
 
-    fn mouse_button_up_event(&mut self, _ctx: &mut Context, _button: MouseButton, x: f32, y: f32) {
-        self.grid.click(Vec2::new(x, y));
+    fn mouse_button_up_event(&mut self, _ctx: &mut Context, button: MouseButton, x: f32, y: f32) {
+        if button == MouseButton::Left {
+            self.grid.click(Vec2::new(x, y));
+        } else {
+            self.grid.mark(Vec2::new(x, y));
+        }
     }
 }
 

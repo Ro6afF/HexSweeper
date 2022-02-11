@@ -13,6 +13,7 @@ use std::f32::consts::PI;
 #[derive(Clone)]
 pub struct HexTile {
     pub mine: bool,
+    pub marked: bool,
     pub display: Option<u8>,
     pub size: f32,
     pub pos: Vec2,
@@ -25,6 +26,7 @@ impl HexTile {
             pos,
             mine,
             display: None,
+            marked: false,
         }
     }
 
@@ -77,9 +79,13 @@ impl HexTile {
             DrawMode::fill(),
             &points,
             if self.display == None {
-                Color::GREEN
+                if self.marked {
+                    Color::RED
+                } else {
+                    Color::new(0.8, 0.8, 0.8, 1.0)
+                }
             } else {
-                Color::BLACK
+                Color::GREEN
             },
         )?;
         let border = Mesh::new_polygon(ctx, DrawMode::stroke(2.0), &points, Color::WHITE)?;
@@ -91,7 +97,7 @@ impl HexTile {
                 color: if self.mine {
                     Some(Color::new(1.0, 0.0, 0.0, 1.0))
                 } else {
-                    Some(Color::WHITE)
+                    Some(Color::BLACK)
                 },
                 font: Some(graphics::Font::default()),
                 scale: Some(PxScale::from(30.0)),

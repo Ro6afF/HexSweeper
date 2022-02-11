@@ -55,7 +55,9 @@ impl HexGrid {
         for i in &mut self.grid {
             for j in i {
                 if j.is_inside(pos) {
-                    j.display = Some(cl.count_mines(x, y));
+                    if !j.marked {
+                        j.display = Some(cl.count_mines(x, y));
+                    }
                 }
                 y += 1;
             }
@@ -64,13 +66,21 @@ impl HexGrid {
         }
     }
 
+    pub fn mark(&mut self, pos: Vec2) {
+        for i in &mut self.grid {
+            for j in i {
+                if j.is_inside(pos) && j.display == None{
+                    j.marked ^= true;
+                }
+            }
+        }
+    }
+
     pub fn count_mines(&self, x: usize, y: usize) -> u8 {
         let mut res = 0;
 
         let size_x = self.grid.len();
         let size_y = self.grid[0].len();
-
-        println!("{} {}", x, y);
 
         if x > 0 {
             res += self.grid[x - 1][y].mine as u8;
