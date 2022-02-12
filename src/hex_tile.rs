@@ -1,3 +1,4 @@
+use crate::Player;
 use ggez::graphics;
 use ggez::graphics::Color;
 use ggez::graphics::DrawMode;
@@ -9,6 +10,7 @@ use ggez::Context;
 use ggez::GameResult;
 use glam::Vec2;
 use std::f32::consts::PI;
+use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct HexTile {
@@ -17,6 +19,7 @@ pub struct HexTile {
     pub display: Option<u8>,
     pub size: f32,
     pub pos: Vec2,
+    pub player: Option<Rc<Player>>,
 }
 
 impl HexTile {
@@ -27,6 +30,7 @@ impl HexTile {
             mine,
             display: None,
             marked: false,
+            player: None,
         }
     }
 
@@ -85,7 +89,11 @@ impl HexTile {
                     Color::new(0.8, 0.8, 0.8, 1.0)
                 }
             } else {
-                Color::GREEN
+                if let Some(p) = &self.player {
+                    p.color
+                } else {
+                    Color::WHITE
+                }
             },
         )?;
         let border = Mesh::new_polygon(ctx, DrawMode::stroke(2.0), &points, Color::WHITE)?;

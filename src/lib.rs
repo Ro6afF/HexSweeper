@@ -1,2 +1,7 @@
-pub mod hex_tile;
-pub mod hex_grid;
+mod hex_grid;
+mod hex_tile;
+mod player;
+
+pub use hex_grid::HexGrid;
+pub use hex_tile::HexTile;
+pub use player::Player;

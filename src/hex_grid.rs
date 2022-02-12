@@ -1,8 +1,10 @@
-use crate::hex_tile::HexTile;
+use crate::HexTile;
+use crate::Player;
 use ggez::Context;
 use ggez::GameResult;
 use glam::Vec2;
 use std::f32::consts::PI;
+use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct HexGrid {
@@ -49,7 +51,7 @@ impl HexGrid {
         Ok(())
     }
 
-    pub fn click(&mut self, pos: Vec2) {
+    pub fn click(&mut self, pos: Vec2, player: Rc<Player>) {
         let cl = self.clone();
         let (mut x, mut y) = (0, 0);
         for i in &mut self.grid {
@@ -57,7 +59,9 @@ impl HexGrid {
                 if j.is_inside(pos) {
                     if !j.marked {
                         j.display = Some(cl.count_mines(x, y));
+                        j.player = Some(player);
                     }
+                    return;
                 }
                 y += 1;
             }
@@ -69,7 +73,7 @@ impl HexGrid {
     pub fn mark(&mut self, pos: Vec2) {
         for i in &mut self.grid {
             for j in i {
-                if j.is_inside(pos) && j.display == None{
+                if j.is_inside(pos) && j.display == None {
                     j.marked ^= true;
                 }
             }
