@@ -44,17 +44,22 @@ impl event::EventHandler<ggez::GameError> for MainState {
     }
 
     fn mouse_button_up_event(&mut self, _ctx: &mut Context, button: MouseButton, x: f32, y: f32) {
-        if button == MouseButton::Left {
+        match if button == MouseButton::Left {
             self.grid
-                .click(Vec2::new(x, y), self.players[self.curr_player].clone());
+                .click(Vec2::new(x, y), self.players[self.curr_player].clone())
         } else {
-            // self.grid.mark(Vec2::new(x, y), self.players[self.curr_player]);
-            self.grid.mark(Vec2::new(x, y));
+            self.grid
+                .mark(Vec2::new(x, y), self.players[self.curr_player].clone())
+        } {
+            Ok(_) => {
+                self.curr_player += 1;
+                if self.curr_player >= self.players.len() {
+                    self.curr_player = 0;
+                }
+            }
+            _ => {}
         }
-        self.curr_player += 1;
-        if self.curr_player >= self.players.len() {
-            self.curr_player = 0;
-        }
+        println!("{} {}", Rc::strong_count(&self.players[0]), Rc::strong_count(&self.players[1]));
     }
 }
 

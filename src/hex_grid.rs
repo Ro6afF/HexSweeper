@@ -1,6 +1,7 @@
 use crate::HexTile;
 use crate::Player;
 use ggez::Context;
+use ggez::GameError;
 use ggez::GameResult;
 use glam::Vec2;
 use std::f32::consts::PI;
@@ -9,6 +10,7 @@ use std::rc::Rc;
 #[derive(Clone)]
 pub struct HexGrid {
     grid: Vec<Vec<HexTile>>,
+    mines_loaded: bool,
 }
 
 impl HexGrid {
@@ -29,17 +31,27 @@ impl HexGrid {
                 ));
             }
         }
-        for _ in 0..10 {
+
+        Self {
+            grid,
+            mines_loaded: false,
+        }
+    }
+
+    fn gen_mines(&mut self, pos: Vec2, cnt_mines: usize) {
+        for _ in 0..cnt_mines {
             loop {
-                let (x, y) = (fastrand::usize(..cnt_x), fastrand::usize(..cnt_y));
-                if !grid[x][y].mine {
-                    grid[x][y].mine = true;
+                let (x, y) = (
+                    fastrand::usize(..(self.grid.len())),
+                    fastrand::usize(..(self.grid[0].len())),
+                );
+                if !self.grid[x][y].mine && !self.grid[x][y].is_inside(pos) {
+                    self.grid[x][y].mine = true;
                     break;
                 }
             }
         }
-
-        Self { grid }
+        self.mines_loaded = true;
     }
 
     pub fn draw(&self, ctx: &mut Context) -> GameResult {
@@ -51,33 +63,41 @@ impl HexGrid {
         Ok(())
     }
 
-    pub fn click(&mut self, pos: Vec2, player: Rc<Player>) {
+    pub fn click(&mut self, pos: Vec2, player: Rc<Player>) -> GameResult {
+        if !self.mines_loaded {
+            self.gen_mines(pos, 15)
+        }
         let cl = self.clone();
         let (mut x, mut y) = (0, 0);
         for i in &mut self.grid {
             for j in i {
                 if j.is_inside(pos) {
-                    if !j.marked {
+                    if !j.marked && j.display == None {
                         j.display = Some(cl.count_mines(x, y));
                         j.player = Some(player);
+                        return Ok(());
                     }
-                    return;
+                    return Err(GameError::CustomError("invalid click".to_string()));
                 }
                 y += 1;
             }
             y = 0;
             x += 1;
         }
+        Err(GameError::CustomError("invalid click".to_string()))
     }
 
-    pub fn mark(&mut self, pos: Vec2) {
+    pub fn mark(&mut self, pos: Vec2, player: Rc<Player>) -> GameResult {
         for i in &mut self.grid {
             for j in i {
                 if j.is_inside(pos) && j.display == None {
                     j.marked ^= true;
+                    j.player = Some(player);
+                    return Ok(());
                 }
             }
         }
+        Err(GameError::CustomError("invalid mark".to_string()))
     }
 
     pub fn count_mines(&self, x: usize, y: usize) -> u8 {
