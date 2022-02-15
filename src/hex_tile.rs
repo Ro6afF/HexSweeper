@@ -16,7 +16,7 @@ use std::rc::Rc;
 pub struct HexTile {
     pub mine: bool,
     pub marked: bool,
-    pub display: Option<u8>,
+    pub display: Option<usize>,
     pub size: f32,
     pub pos: Vec2,
     pub player: Option<Rc<Player>>,
