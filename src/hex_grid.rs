@@ -32,7 +32,6 @@ impl HexGrid {
                         j as f32 * (50.0 / 2.0 / (PI / 6.0).cos() + 50.0 / 2.0 * (PI / 6.0).tan())
                             + 33.0,
                     ),
-                    false,
                 ));
             }
         }
@@ -95,7 +94,8 @@ impl HexGrid {
                                 }
                             }
                         };
-                        return ClickResult::Ok(cnt);
+                        // TODO: return ClickResult::Ok(cnt);
+                        return ClickResult::Ok(1);
                     }
                     return ClickResult::Invalid;
                 }

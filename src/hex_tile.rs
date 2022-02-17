@@ -23,18 +23,18 @@ pub struct HexTile {
 }
 
 impl HexTile {
-    pub fn new(size: f32, pos: Vec2, mine: bool) -> Self {
+    pub fn new(size: f32, pos: Vec2) -> Self {
         Self {
             size,
             pos,
-            mine,
+            mine: false,
             display: None,
             marked: false,
             player: None,
         }
     }
 
-    pub fn is_inside(&self, p: Vec2) -> bool {
+    fn get_points(&self) -> Vec<Vec2> {
         let mut points = vec![];
 
         for i in 0..6 {
@@ -47,6 +47,13 @@ impl HexTile {
                     + self.pos,
             )
         }
+
+        points
+    }
+
+    pub fn is_inside(&self, p: Vec2) -> bool {
+        let points = self.get_points();
+
         for i in 0..6 {
             let prod = if i == 5 {
                 (points[i] - p)
@@ -67,16 +74,7 @@ impl HexTile {
     }
 
     pub fn draw(&self, ctx: &mut Context) -> GameResult {
-        let mut points = vec![];
-        for i in 0..6 {
-            points.push(
-                self.size / 2.0 / (PI / 6.0).cos()
-                    * Vec2::new(
-                        (2.0 * PI / 6.0 * (i as f32) + 0.5 * PI).cos(),
-                        (2.0 * PI / 6.0 * (i as f32) + 0.5 * PI).sin(),
-                    ),
-            )
-        }
+        let points = self.get_points();
 
         let inner = Mesh::new_polygon(
             ctx,
@@ -97,8 +95,8 @@ impl HexTile {
             },
         )?;
         let border = Mesh::new_polygon(ctx, DrawMode::stroke(2.0), &points, Color::WHITE)?;
-        graphics::draw(ctx, &inner, (self.pos,))?;
-        graphics::draw(ctx, &border, (self.pos,))?;
+        graphics::draw(ctx, &inner, (Vec2::new(0.0, 0.0),))?;
+        graphics::draw(ctx, &border, (Vec2::new(0.0, 0.0),))?;
         if let Some(num) = self.display {
             let txt = Text::new(TextFragment {
                 text: num.to_string(),
@@ -115,5 +113,58 @@ impl HexTile {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::HexTile;
+    use glam::Vec2;
+
+    const EPS: f32 = 0.001;
+
+    // TEST get_points
+    #[test]
+    fn get_points_basic() {
+        let points = HexTile::new(1.0, Vec2::new(0.0, 0.0)).get_points();
+        assert!((points[0] - Vec2::new(0.000, 0.577)).length() <= EPS);
+        assert!((points[1] - Vec2::new(-0.500, 0.288)).length() <= EPS);
+        assert!((points[2] - Vec2::new(-0.500, -0.288)).length() <= EPS);
+        assert!((points[3] - Vec2::new(0.000, -0.577)).length() <= EPS);
+        assert!((points[4] - Vec2::new(0.500, -0.288)).length() <= EPS);
+        assert!((points[5] - Vec2::new(0.500, 0.288)).length() <= EPS);
+    }
+
+    #[test]
+    fn get_points_scale() {
+        let points = HexTile::new(10.0, Vec2::new(0.0, 0.0)).get_points();
+        assert!((points[0] - Vec2::new(0.000, 5.774)).length() <= EPS);
+        assert!((points[1] - Vec2::new(-5.000, 2.887)).length() <= EPS);
+        assert!((points[2] - Vec2::new(-5.000, -2.887)).length() <= EPS);
+        assert!((points[3] - Vec2::new(0.000, -5.774)).length() <= EPS);
+        assert!((points[4] - Vec2::new(5.000, -2.887)).length() <= EPS);
+        assert!((points[5] - Vec2::new(5.000, 2.887)).length() <= EPS);
+    }
+
+    #[test]
+    fn get_points_move() {
+        let points = HexTile::new(1.0, Vec2::new(42.0, 33.0)).get_points();
+        assert!((points[0] - Vec2::new(0.000, 0.577) - Vec2::new(42.0, 33.0)).length() <= EPS);
+        assert!((points[1] - Vec2::new(-0.500, 0.288) - Vec2::new(42.0, 33.0)).length() <= EPS);
+        assert!((points[2] - Vec2::new(-0.500, -0.288) - Vec2::new(42.0, 33.0)).length() <= EPS);
+        assert!((points[3] - Vec2::new(0.000, -0.577) - Vec2::new(42.0, 33.0)).length() <= EPS);
+        assert!((points[4] - Vec2::new(0.500, -0.288) - Vec2::new(42.0, 33.0)).length() <= EPS);
+        assert!((points[5] - Vec2::new(0.500, 0.288) - Vec2::new(42.0, 33.0)).length() <= EPS);
+    }
+
+    #[test]
+    fn get_points_scale_and_move() {
+        let points = HexTile::new(10.0, Vec2::new(42.0, 33.0)).get_points();
+        assert!((points[0] - Vec2::new(0.000, 5.774) - Vec2::new(42.0, 33.0)).length() <= EPS);
+        assert!((points[1] - Vec2::new(-5.000, 2.887) - Vec2::new(42.0, 33.0)).length() <= EPS);
+        assert!((points[2] - Vec2::new(-5.000, -2.887) - Vec2::new(42.0, 33.0)).length() <= EPS);
+        assert!((points[3] - Vec2::new(0.000, -5.774) - Vec2::new(42.0, 33.0)).length() <= EPS);
+        assert!((points[4] - Vec2::new(5.000, -2.887) - Vec2::new(42.0, 33.0)).length() <= EPS);
+        assert!((points[5] - Vec2::new(5.000, 2.887) - Vec2::new(42.0, 33.0)).length() <= EPS);
     }
 }
