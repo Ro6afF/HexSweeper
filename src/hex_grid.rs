@@ -7,7 +7,7 @@ use std::f32::consts::PI;
 use std::rc::Rc;
 
 pub enum ClickResult {
-    Ok(usize),
+    Ok,
     Invalid,
     Mine,
 }
@@ -16,10 +16,11 @@ pub enum ClickResult {
 pub struct HexGrid {
     grid: Vec<Vec<HexTile>>,
     mines_loaded: bool,
+    mine_count: usize,
 }
 
 impl HexGrid {
-    pub fn new(cnt_x: usize, cnt_y: usize) -> Self {
+    pub fn new(cnt_x: usize, cnt_y: usize, mine_count: usize) -> Self {
         let mut grid = vec![];
 
         for i in 0..cnt_x {
@@ -38,12 +39,17 @@ impl HexGrid {
 
         Self {
             grid,
+            mine_count,
             mines_loaded: false,
         }
     }
 
-    fn gen_mines(&mut self, pos: Vec2, cnt_mines: usize) {
-        for _ in 0..cnt_mines {
+    pub fn tile_number(&self) -> usize {
+        self.grid.len() * self.grid[0].len()
+    }
+
+    fn gen_mines(&mut self, pos: Vec2) {
+        for _ in 0..self.mine_count {
             loop {
                 let (x, y) = (
                     fastrand::usize(..(self.grid.len())),
@@ -72,10 +78,10 @@ impl HexGrid {
         pos: Vec2,
         players: &Vec<Rc<Player>>,
         players_alive: usize,
-        curr_player: usize,
+        curr_player: &mut usize,
     ) -> ClickResult {
         if !self.mines_loaded {
-            self.gen_mines(pos, 15)
+            self.gen_mines(pos);
         }
         let cl = self.clone();
         let (mut x, mut y) = (0, 0);
@@ -84,26 +90,24 @@ impl HexGrid {
                 if j.is_inside(pos) {
                     if !j.marked && j.display == None {
                         j.display = Some(cl.count_mines(x, y));
-                        j.player = Some(players[curr_player].clone());
+                        j.player = Some(players[*curr_player].clone());
                         if j.mine {
                             return ClickResult::Mine;
                         }
-
-                        let mut cnt = 1;
+                        *curr_player += 1;
+                        *curr_player %= players_alive;
 
                         if j.display == Some(0) {
                             for (nx, ny) in self.get_neighbours(x, y) {
-                                if let ClickResult::Ok(c) = self.click(
+                                self.click(
                                     self.grid[nx][ny].pos,
                                     players,
                                     players_alive,
-                                    (curr_player + 1) % players_alive,
-                                ) {
-                                    cnt += c;
-                                }
+                                    curr_player,
+                                );
                             }
                         };
-                        return ClickResult::Ok(cnt);
+                        return ClickResult::Ok;
                     }
                     return ClickResult::Invalid;
                 }
@@ -121,7 +125,7 @@ impl HexGrid {
                 if j.is_inside(pos) && j.display == None {
                     j.marked ^= true;
                     j.player = Some(player);
-                    return ClickResult::Ok(1);
+                    return ClickResult::Ok;
                 }
             }
         }
@@ -190,7 +194,7 @@ mod tests {
     // TEST get_neighbours
     #[test]
     fn test_neighbours_even() {
-        let grid = HexGrid::new(10, 10);
+        let grid = HexGrid::new(10, 10, 10);
         let res = grid.get_neighbours(4, 4);
 
         assert_eq!(res.len(), 6);
@@ -204,7 +208,7 @@ mod tests {
 
     #[test]
     fn test_neighbours_odd() {
-        let grid = HexGrid::new(10, 10);
+        let grid = HexGrid::new(10, 10, 10);
         let res = grid.get_neighbours(5, 5);
 
         assert_eq!(res.len(), 6);
@@ -218,7 +222,7 @@ mod tests {
 
     #[test]
     fn test_neighbours_corner0() {
-        let grid = HexGrid::new(10, 10);
+        let grid = HexGrid::new(10, 10, 10);
         let res = grid.get_neighbours(0, 0);
 
         assert_eq!(res.len(), 2);
@@ -228,7 +232,7 @@ mod tests {
 
     #[test]
     fn test_neighbours_corner1() {
-        let grid = HexGrid::new(10, 10);
+        let grid = HexGrid::new(10, 10, 10);
         let res = grid.get_neighbours(9, 0);
 
         assert_eq!(res.len(), 3);
@@ -239,7 +243,7 @@ mod tests {
 
     #[test]
     fn test_neighbours_corner2() {
-        let grid = HexGrid::new(10, 10);
+        let grid = HexGrid::new(10, 10, 10);
         let res = grid.get_neighbours(9, 9);
 
         assert_eq!(res.len(), 2);
@@ -249,7 +253,7 @@ mod tests {
 
     #[test]
     fn test_neighbours_corner3() {
-        let grid = HexGrid::new(10, 10);
+        let grid = HexGrid::new(10, 10, 10);
         let res = grid.get_neighbours(0, 9);
 
         assert_eq!(res.len(), 3);
@@ -260,7 +264,7 @@ mod tests {
 
     #[test]
     fn test_neighbours_edge0() {
-        let grid = HexGrid::new(10, 10);
+        let grid = HexGrid::new(10, 10, 10);
         let res = grid.get_neighbours(2, 0);
 
         assert_eq!(res.len(), 4);
@@ -272,7 +276,7 @@ mod tests {
 
     #[test]
     fn test_neighbours_edge1_even() {
-        let grid = HexGrid::new(10, 10);
+        let grid = HexGrid::new(10, 10, 10);
         let res = grid.get_neighbours(9, 2);
 
         assert_eq!(res.len(), 5);
@@ -285,7 +289,7 @@ mod tests {
 
     #[test]
     fn test_neighbours_edge1_odd() {
-        let grid = HexGrid::new(10, 10);
+        let grid = HexGrid::new(10, 10, 10);
         let res = grid.get_neighbours(9, 3);
 
         assert_eq!(res.len(), 3);
@@ -296,7 +300,7 @@ mod tests {
 
     #[test]
     fn test_neighbours_edge2_odd() {
-        let grid = HexGrid::new(10, 10);
+        let grid = HexGrid::new(10, 10, 10);
         let res = grid.get_neighbours(2, 9);
 
         assert_eq!(res.len(), 4);
@@ -308,7 +312,7 @@ mod tests {
 
     #[test]
     fn test_neighbours_edge2_even() {
-        let grid = HexGrid::new(11, 11);
+        let grid = HexGrid::new(11, 11, 11);
         let res = grid.get_neighbours(2, 10);
 
         assert_eq!(res.len(), 4);
@@ -320,7 +324,7 @@ mod tests {
 
     #[test]
     fn test_neighbours_edge3_even() {
-        let grid = HexGrid::new(10, 10);
+        let grid = HexGrid::new(10, 10, 10);
         let res = grid.get_neighbours(0, 2);
 
         assert_eq!(res.len(), 3);
@@ -331,7 +335,7 @@ mod tests {
 
     #[test]
     fn test_neighbours_edge3_odd() {
-        let grid = HexGrid::new(10, 10);
+        let grid = HexGrid::new(10, 10, 10);
         let res = grid.get_neighbours(0, 3);
 
         assert_eq!(res.len(), 5);
@@ -345,13 +349,13 @@ mod tests {
     // TEST count_mines
     #[test]
     fn count_mines0() {
-        let grid = HexGrid::new(10, 10);
+        let grid = HexGrid::new(10, 10, 10);
         assert_eq!(grid.count_mines(1, 1), 0);
     }
 
     #[test]
     fn count_mines1() {
-        let mut grid = HexGrid::new(10, 10);
+        let mut grid = HexGrid::new(10, 10, 10);
         grid.grid[0][1].mine = true;
         assert_eq!(grid.count_mines(1, 1), 1);
     }

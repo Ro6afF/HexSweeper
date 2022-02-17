@@ -18,7 +18,7 @@ struct MainState {
 
 impl MainState {
     fn new() -> GameResult<MainState> {
-        let grid = HexGrid::new(10, 10);
+        let grid = HexGrid::new(10, 10, 10);
         let s = MainState {
             grid,
             players: vec![
@@ -40,29 +40,35 @@ impl event::EventHandler<ggez::GameError> for MainState {
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
         graphics::clear(ctx, [0.42, 0.42, 0.42, 1.0].into());
+        let mut cnt_revealed = 0;
+        for i in &self.players {
+            cnt_revealed += Rc::strong_count(&i) - 1;
+        }
 
-        self.grid.draw(ctx)?;
-        for i in 0..self.players.len() {
-            if i < self.players_alive {
-                if i == self.curr_player {
-                    self.players[i].draw_active(
-                        ctx,
-                        Vec2::new(600 as f32, (i * 100) as f32),
-                        Rc::strong_count(&self.players[i]) - 1,
-                    )?;
+        if self.players_alive > 0 && cnt_revealed < self.grid.tile_number() {
+            self.grid.draw(ctx)?;
+            for i in 0..self.players.len() {
+                if i < self.players_alive {
+                    if i == self.curr_player {
+                        self.players[i].draw_active(
+                            ctx,
+                            Vec2::new(600 as f32, (i * 100) as f32),
+                            Rc::strong_count(&self.players[i]) - 1,
+                        )?;
+                    } else {
+                        self.players[i].draw_inactive(
+                            ctx,
+                            Vec2::new(600 as f32, (i * 100) as f32),
+                            Rc::strong_count(&self.players[i]) - 1,
+                        )?;
+                    }
                 } else {
-                    self.players[i].draw_inactive(
+                    self.players[i].draw_dead(
                         ctx,
                         Vec2::new(600 as f32, (i * 100) as f32),
-                        Rc::strong_count(&self.players[i]) - 1,
+                        Rc::strong_count(&self.players[i]),
                     )?;
                 }
-            } else {
-                self.players[i].draw_dead(
-                    ctx,
-                    Vec2::new(600 as f32, (i * 100) as f32),
-                    Rc::strong_count(&self.players[i]),
-                )?;
             }
         }
         graphics::present(ctx)?;
@@ -73,31 +79,35 @@ impl event::EventHandler<ggez::GameError> for MainState {
         if self.players_alive == 0 {
             return;
         }
-        match if button == MouseButton::Left {
-            self.grid.click(
+        if button == MouseButton::Left {
+            match self.grid.click(
                 Vec2::new(x, y),
                 &self.players,
                 self.players_alive,
-                self.curr_player,
-            )
+                &mut self.curr_player,
+            ) {
+                ClickResult::Mine => {
+                    self.players_alive -= 1;
+                    self.players.swap(self.players_alive, self.curr_player);
+                    if self.players_alive > 0 {
+                        self.curr_player %= self.players_alive;
+                    }
+                }
+                _ => {}
+            }
         } else {
-            self.grid
+            match self
+                .grid
                 .mark(Vec2::new(x, y), self.players[self.curr_player].clone())
-        } {
-            ClickResult::Ok(i) => {
-                self.curr_player += i;
-                if self.players_alive > 0 {
-                    self.curr_player %= self.players_alive;
+            {
+                ClickResult::Ok => {
+                    self.curr_player += 1;
+                    if self.players_alive > 0 {
+                        self.curr_player %= self.players_alive;
+                    }
                 }
+                _ => {}
             }
-            ClickResult::Mine => {
-                self.players_alive -= 1;
-                self.players.swap(self.players_alive, self.curr_player);
-                if self.players_alive > 0 {
-                    self.curr_player %= self.players_alive;
-                }
-            }
-            _ => {}
         }
     }
 }
