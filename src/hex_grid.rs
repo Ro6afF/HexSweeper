@@ -88,12 +88,13 @@ impl HexGrid {
 
                         if j.display == Some(0) {
                             for (nx, ny) in self.get_neighbours(x, y) {
-                                if let ClickResult::Ok(c) = self.click(self.grid[nx][ny].pos, player.clone()) {
+                                if let ClickResult::Ok(c) =
+                                    self.click(self.grid[nx][ny].pos, player.clone())
+                                {
                                     cnt += c;
                                 }
                             }
                         };
-                        
                         return ClickResult::Ok(cnt);
                     }
                     return ClickResult::Invalid;
@@ -172,4 +173,180 @@ impl HexGrid {
         }
         res
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::HexGrid;
+
+    // TEST get_neighbours
+    #[test]
+    fn test_neighbours_even() {
+        let grid = HexGrid::new(10, 10);
+        let res = grid.get_neighbours(4, 4);
+
+        assert_eq!(res.len(), 6);
+        assert!(res.contains(&(3, 4)));
+        assert!(res.contains(&(5, 4)));
+        assert!(res.contains(&(3, 3)));
+        assert!(res.contains(&(4, 3)));
+        assert!(res.contains(&(3, 5)));
+        assert!(res.contains(&(4, 5)));
+    }
+
+    #[test]
+    fn test_neighbours_odd() {
+        let grid = HexGrid::new(10, 10);
+        let res = grid.get_neighbours(5, 5);
+
+        assert_eq!(res.len(), 6);
+        assert!(res.contains(&(4, 5)));
+        assert!(res.contains(&(6, 5)));
+        assert!(res.contains(&(5, 4)));
+        assert!(res.contains(&(6, 4)));
+        assert!(res.contains(&(5, 6)));
+        assert!(res.contains(&(6, 6)));
+    }
+
+    #[test]
+    fn test_neighbours_corner0() {
+        let grid = HexGrid::new(10, 10);
+        let res = grid.get_neighbours(0, 0);
+
+        assert_eq!(res.len(), 2);
+        assert!(res.contains(&(0, 1)));
+        assert!(res.contains(&(1, 0)));
+    }
+
+    #[test]
+    fn test_neighbours_corner1() {
+        let grid = HexGrid::new(10, 10);
+        let res = grid.get_neighbours(9, 0);
+
+        assert_eq!(res.len(), 3);
+        assert!(res.contains(&(9, 1)));
+        assert!(res.contains(&(8, 0)));
+        assert!(res.contains(&(8, 1)));
+    }
+
+    #[test]
+    fn test_neighbours_corner2() {
+        let grid = HexGrid::new(10, 10);
+        let res = grid.get_neighbours(9, 9);
+
+        assert_eq!(res.len(), 2);
+        assert!(res.contains(&(9, 8)));
+        assert!(res.contains(&(8, 9)));
+    }
+
+    #[test]
+    fn test_neighbours_corner3() {
+        let grid = HexGrid::new(10, 10);
+        let res = grid.get_neighbours(0, 9);
+
+        assert_eq!(res.len(), 3);
+        assert!(res.contains(&(0, 8)));
+        assert!(res.contains(&(1, 9)));
+        assert!(res.contains(&(1, 8)));
+    }
+
+    #[test]
+    fn test_neighbours_edge0() {
+        let grid = HexGrid::new(10, 10);
+        let res = grid.get_neighbours(2, 0);
+
+        assert_eq!(res.len(), 4);
+        assert!(res.contains(&(1, 0)));
+        assert!(res.contains(&(3, 0)));
+        assert!(res.contains(&(1, 1)));
+        assert!(res.contains(&(2, 1)));
+    }
+
+    #[test]
+    fn test_neighbours_edge1_even() {
+        let grid = HexGrid::new(10, 10);
+        let res = grid.get_neighbours(9, 2);
+
+        assert_eq!(res.len(), 5);
+        assert!(res.contains(&(9, 1)));
+        assert!(res.contains(&(8, 1)));
+        assert!(res.contains(&(8, 2)));
+        assert!(res.contains(&(9, 3)));
+        assert!(res.contains(&(8, 3)));
+    }
+
+    #[test]
+    fn test_neighbours_edge1_odd() {
+        let grid = HexGrid::new(10, 10);
+        let res = grid.get_neighbours(9, 3);
+
+        assert_eq!(res.len(), 3);
+        assert!(res.contains(&(9, 2)));
+        assert!(res.contains(&(9, 4)));
+        assert!(res.contains(&(8, 3)));
+    }
+
+    #[test]
+    fn test_neighbours_edge2_odd() {
+        let grid = HexGrid::new(10, 10);
+        let res = grid.get_neighbours(2, 9);
+
+        assert_eq!(res.len(), 4);
+        assert!(res.contains(&(1, 9)));
+        assert!(res.contains(&(3, 9)));
+        assert!(res.contains(&(2, 8)));
+        assert!(res.contains(&(3, 8)));
+    }
+
+    #[test]
+    fn test_neighbours_edge2_even() {
+        let grid = HexGrid::new(11, 11);
+        let res = grid.get_neighbours(2, 10);
+
+        assert_eq!(res.len(), 4);
+        assert!(res.contains(&(1, 10)));
+        assert!(res.contains(&(3, 10)));
+        assert!(res.contains(&(1, 9)));
+        assert!(res.contains(&(2, 9)));
+    }
+
+    #[test]
+    fn test_neighbours_edge3_even() {
+        let grid = HexGrid::new(10, 10);
+        let res = grid.get_neighbours(0, 2);
+
+        assert_eq!(res.len(), 3);
+        assert!(res.contains(&(0, 1)));
+        assert!(res.contains(&(0, 3)));
+        assert!(res.contains(&(1, 2)));
+    }
+
+    #[test]
+    fn test_neighbours_edge3_odd() {
+        let grid = HexGrid::new(10, 10);
+        let res = grid.get_neighbours(0, 3);
+
+        assert_eq!(res.len(), 5);
+        assert!(res.contains(&(0, 2)));
+        assert!(res.contains(&(0, 4)));
+        assert!(res.contains(&(1, 2)));
+        assert!(res.contains(&(1, 4)));
+        assert!(res.contains(&(1, 3)));
+    }
+
+    // TEST count_mines
+    #[test]
+    fn count_mines0() {
+        let grid = HexGrid::new(10, 10);
+        assert_eq!(grid.count_mines(1, 1), 0);
+    }
+
+    #[test]
+    fn count_mines1() {
+        let mut grid = HexGrid::new(10, 10);
+        grid.grid[0][1].mine = true;
+        assert_eq!(grid.count_mines(1, 1), 1);
+    }
+
+    
 }
