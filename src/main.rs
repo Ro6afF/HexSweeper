@@ -23,8 +23,8 @@ impl MainState {
             grid,
             players: vec![
                 Rc::new(Player::new(Color::GREEN, "zele".to_string())),
-                Rc::new(Player::new(Color::RED, "domat".to_string())),
-                Rc::new(Player::new(Color::YELLOW, "banana".to_string())),
+                Rc::new(Player::new(Color::BLUE, "patladjan".to_string())),
+                Rc::new(Player::new(Color::YELLOW, "banan".to_string())),
             ],
             players_alive: 3,
             curr_player: 0,
@@ -42,7 +42,17 @@ impl event::EventHandler<ggez::GameError> for MainState {
         graphics::clear(ctx, [0.42, 0.42, 0.42, 1.0].into());
 
         self.grid.draw(ctx)?;
-
+        for i in 0..self.players.len() {
+            if i < self.players_alive {
+                if i == self.curr_player {
+                    self.players[i].draw_active(ctx, Vec2::new(600 as f32, (i * 100) as f32))?;
+                } else {
+                    self.players[i].draw_inactive(ctx, Vec2::new(600 as f32, (i * 100) as f32))?;
+                }
+            } else {
+                self.players[i].draw_dead(ctx, Vec2::new(600 as f32, (i * 100) as f32))?;
+            }
+        }
         graphics::present(ctx)?;
         Ok(())
     }

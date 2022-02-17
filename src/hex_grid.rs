@@ -347,6 +347,4 @@ mod tests {
         grid.grid[0][1].mine = true;
         assert_eq!(grid.count_mines(1, 1), 1);
     }
-
-    
 }
