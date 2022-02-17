@@ -67,7 +67,13 @@ impl HexGrid {
         Ok(())
     }
 
-    pub fn click(&mut self, pos: Vec2, player: Rc<Player>) -> ClickResult {
+    pub fn click(
+        &mut self,
+        pos: Vec2,
+        players: &Vec<Rc<Player>>,
+        players_alive: usize,
+        curr_player: usize,
+    ) -> ClickResult {
         if !self.mines_loaded {
             self.gen_mines(pos, 15)
         }
@@ -78,7 +84,7 @@ impl HexGrid {
                 if j.is_inside(pos) {
                     if !j.marked && j.display == None {
                         j.display = Some(cl.count_mines(x, y));
-                        j.player = Some(player.clone());
+                        j.player = Some(players[curr_player].clone());
                         if j.mine {
                             return ClickResult::Mine;
                         }
@@ -87,15 +93,17 @@ impl HexGrid {
 
                         if j.display == Some(0) {
                             for (nx, ny) in self.get_neighbours(x, y) {
-                                if let ClickResult::Ok(c) =
-                                    self.click(self.grid[nx][ny].pos, player.clone())
-                                {
+                                if let ClickResult::Ok(c) = self.click(
+                                    self.grid[nx][ny].pos,
+                                    players,
+                                    players_alive,
+                                    (curr_player + 1) % players_alive,
+                                ) {
                                     cnt += c;
                                 }
                             }
                         };
-                        // TODO: return ClickResult::Ok(cnt);
-                        return ClickResult::Ok(1);
+                        return ClickResult::Ok(cnt);
                     }
                     return ClickResult::Invalid;
                 }
