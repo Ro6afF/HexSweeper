@@ -79,11 +79,22 @@ impl HexGrid {
                 if j.is_inside(pos) {
                     if !j.marked && j.display == None {
                         j.display = Some(cl.count_mines(x, y));
-                        j.player = Some(player);
+                        j.player = Some(player.clone());
                         if j.mine {
                             return ClickResult::Mine;
                         }
-                        return ClickResult::Ok(1);
+
+                        let mut cnt = 1;
+
+                        if j.display == Some(0) {
+                            for (nx, ny) in self.get_neighbours(x, y) {
+                                if let ClickResult::Ok(c) = self.click(self.grid[nx][ny].pos, player.clone()) {
+                                    cnt += c;
+                                }
+                            }
+                        };
+                        
+                        return ClickResult::Ok(cnt);
                     }
                     return ClickResult::Invalid;
                 }
@@ -108,48 +119,57 @@ impl HexGrid {
         ClickResult::Invalid
     }
 
-    pub fn count_mines(&self, x: usize, y: usize) -> usize {
-        let mut res = 0;
+    fn get_neighbours(&self, x: usize, y: usize) -> Vec<(usize, usize)> {
+        let mut res = vec![];
 
         let size_x = self.grid.len();
         let size_y = self.grid[0].len();
 
         if x > 0 {
-            res += self.grid[x - 1][y].mine as usize;
+            res.push((x - 1, y));
         }
 
         if x + 1 < size_x {
-            res += self.grid[x + 1][y].mine as usize;
+            res.push((x + 1, y));
         }
 
         if y > 0 {
             if y % 2 == 0 {
                 if x > 0 {
-                    res += self.grid[x - 1][y - 1].mine as usize;
+                    res.push((x - 1, y - 1));
                 }
-                res += self.grid[x][y - 1].mine as usize;
+                res.push((x, y - 1));
             } else {
                 if x + 1 < size_x {
-                    res += self.grid[x + 1][y - 1].mine as usize;
+                    res.push((x + 1, y - 1));
                 }
-                res += self.grid[x][y - 1].mine as usize;
+                res.push((x, y - 1));
             }
         }
 
         if y + 1 < size_y {
             if y % 2 == 0 {
                 if x > 0 {
-                    res += self.grid[x - 1][y + 1].mine as usize;
+                    res.push((x - 1, y + 1));
                 }
-                res += self.grid[x][y + 1].mine as usize;
+                res.push((x, y + 1));
             } else {
                 if x + 1 < size_x {
-                    res += self.grid[x + 1][y + 1].mine as usize;
+                    res.push((x + 1, y + 1));
                 }
-                res += self.grid[x][y + 1].mine as usize;
+                res.push((x, y + 1));
             }
         }
 
+        res
+    }
+
+    pub fn count_mines(&self, x: usize, y: usize) -> usize {
+        let mut res = 0;
+
+        for (nx, ny) in self.get_neighbours(x, y) {
+            res += self.grid[nx][ny].mine as usize;
+        }
         res
     }
 }
