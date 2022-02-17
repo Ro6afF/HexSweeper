@@ -90,26 +90,26 @@ impl HexTile {
                 if let Some(p) = &self.player {
                     p.color
                 } else {
-                    Color::WHITE
+                    Color::BLACK
                 }
             },
         )?;
         let border = Mesh::new_polygon(ctx, DrawMode::stroke(2.0), &points, Color::WHITE)?;
         graphics::draw(ctx, &inner, (Vec2::new(0.0, 0.0),))?;
         graphics::draw(ctx, &border, (Vec2::new(0.0, 0.0),))?;
-        if let Some(num) = self.display {
-            let txt = Text::new(TextFragment {
-                text: num.to_string(),
-                color: if self.mine {
-                    Some(Color::new(1.0, 0.0, 0.0, 1.0))
-                } else {
-                    Some(Color::BLACK)
-                },
-                font: Some(graphics::Font::default()),
-                scale: Some(PxScale::from(30.0)),
-                ..Default::default()
-            });
-            graphics::draw(ctx, &txt, (self.pos - Vec2::new(7.0, 15.0),))?;
+        if !self.mine {
+            if let Some(num) = self.display {
+                if num > 0 {
+                    let txt = Text::new(TextFragment {
+                        text: num.to_string(),
+                        color: Some(Color::BLACK),
+                        font: Some(graphics::Font::default()),
+                        scale: Some(PxScale::from(30.0)),
+                        ..Default::default()
+                    });
+                    graphics::draw(ctx, &txt, (self.pos - Vec2::new(7.0, 15.0),))?;
+                }
+            }
         }
 
         Ok(())
@@ -120,6 +120,7 @@ impl HexTile {
 mod tests {
     use crate::HexTile;
     use glam::Vec2;
+    use std::f32::consts::PI;
 
     const EPS: f32 = 0.001;
 
@@ -166,5 +167,28 @@ mod tests {
         assert!((points[3] - Vec2::new(0.000, -5.774) - Vec2::new(42.0, 33.0)).length() <= EPS);
         assert!((points[4] - Vec2::new(5.000, -2.887) - Vec2::new(42.0, 33.0)).length() <= EPS);
         assert!((points[5] - Vec2::new(5.000, 2.887) - Vec2::new(42.0, 33.0)).length() <= EPS);
+    }
+
+    // TEST is_inside
+    #[test]
+    fn is_inside_true() {
+        let tile = HexTile::new(10.0, Vec2::new(0.0, 0.0));
+        let mut i = 0.0;
+
+        while i <= 2.0 * PI {
+            assert!(tile.is_inside(Vec2::new(i.cos(), i.sin()) * 5.0));
+            i += 0.01;
+        }
+    }
+
+    #[test]
+    fn is_inside_false() {
+        let tile = HexTile::new(10.0, Vec2::new(0.0, 0.0));
+        let mut i = 0.0;
+
+        while i <= 2.0 * PI {
+            assert!(!tile.is_inside(Vec2::new(i.cos(), i.sin()) * 11.0));
+            i += 0.01;
+        }
     }
 }

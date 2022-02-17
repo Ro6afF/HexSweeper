@@ -48,6 +48,10 @@ impl HexGrid {
         self.grid.len() * self.grid[0].len()
     }
 
+    pub fn mine_number(&self) -> usize {
+        self.mine_count
+    }
+
     fn gen_mines(&mut self, pos: Vec2) {
         for _ in 0..self.mine_count {
             loop {
@@ -90,10 +94,10 @@ impl HexGrid {
                 if j.is_inside(pos) {
                     if !j.marked && j.display == None {
                         j.display = Some(cl.count_mines(x, y));
-                        j.player = Some(players[*curr_player].clone());
                         if j.mine {
                             return ClickResult::Mine;
                         }
+                        j.player = Some(players[*curr_player].clone());
                         *curr_player += 1;
                         *curr_player %= players_alive;
 
@@ -119,17 +123,14 @@ impl HexGrid {
         ClickResult::Invalid
     }
 
-    pub fn mark(&mut self, pos: Vec2, player: Rc<Player>) -> ClickResult {
+    pub fn mark(&mut self, pos: Vec2) {
         for i in &mut self.grid {
             for j in i {
                 if j.is_inside(pos) && j.display == None {
                     j.marked ^= true;
-                    j.player = Some(player);
-                    return ClickResult::Ok;
                 }
             }
         }
-        ClickResult::Invalid
     }
 
     fn get_neighbours(&self, x: usize, y: usize) -> Vec<(usize, usize)> {
@@ -190,6 +191,31 @@ impl HexGrid {
 #[cfg(test)]
 mod tests {
     use crate::HexGrid;
+
+    // TEST tile_number
+    #[test]
+    fn tile_number0() {
+        let grid = HexGrid::new(10, 10, 10);
+        assert_eq!(grid.tile_number(), 100);
+    }
+
+    #[test]
+    fn tile_number1() {
+        let grid = HexGrid::new(7, 6, 10);
+        assert_eq!(grid.tile_number(), 42);
+    }
+
+    #[test]
+    fn mine_number0() {
+        let grid = HexGrid::new(7, 6, 10);
+        assert_eq!(grid.mine_number(), 10);
+    }
+
+    #[test]
+    fn mine_number1() {
+        let grid = HexGrid::new(7, 6, 11);
+        assert_eq!(grid.mine_number(), 11);
+    }
 
     // TEST get_neighbours
     #[test]

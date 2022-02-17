@@ -45,7 +45,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
             cnt_revealed += Rc::strong_count(&i) - 1;
         }
 
-        if self.players_alive > 0 && cnt_revealed < self.grid.tile_number() {
+        if self.players_alive > 0 && cnt_revealed < self.grid.tile_number() - self.grid.mine_number() {
             self.grid.draw(ctx)?;
             for i in 0..self.players.len() {
                 if i < self.players_alive {
@@ -66,7 +66,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
                     self.players[i].draw_dead(
                         ctx,
                         Vec2::new(600 as f32, (i * 100) as f32),
-                        Rc::strong_count(&self.players[i]),
+                        Rc::strong_count(&self.players[i]) - 1,
                     )?;
                 }
             }
@@ -96,18 +96,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
                 _ => {}
             }
         } else {
-            match self
-                .grid
-                .mark(Vec2::new(x, y), self.players[self.curr_player].clone())
-            {
-                ClickResult::Ok => {
-                    self.curr_player += 1;
-                    if self.players_alive > 0 {
-                        self.curr_player %= self.players_alive;
-                    }
-                }
-                _ => {}
-            }
+            self.grid.mark(Vec2::new(x, y));
         }
     }
 }
