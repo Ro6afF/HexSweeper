@@ -18,7 +18,7 @@ struct MainState {
 
 impl MainState {
     fn new() -> GameResult<MainState> {
-        let grid = HexGrid::new(10, 10, 10);
+        let grid = HexGrid::new(10, 10, 16);
         let s = MainState {
             grid,
             players: vec![
@@ -124,7 +124,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
 pub fn main() -> GameResult {
     let cb = ggez::ContextBuilder::new("hexsweeper", "Dimo")
         .window_setup(ggez::conf::WindowSetup::default().title("Hexsweeper"))
-        .window_mode(ggez::conf::WindowMode::default().dimensions(900.0, 500.0));
+        .window_mode(ggez::conf::WindowMode::default().dimensions(900.0, 460.0));
     let (ctx, event_loop) = cb.build()?;
     let state = MainState::new()?;
     event::run(ctx, event_loop, state)

@@ -67,7 +67,10 @@ impl Player {
 
         let line = graphics::Mesh::new_line(
             ctx,
-            &vec![Vec2::new(0.0, 0.0), Vec2::new(self.txt.width(ctx) + 60.0, 100.0)],
+            &vec![
+                Vec2::new(0.0, 0.0),
+                Vec2::new(self.txt.width(ctx) + 60.0, 100.0),
+            ],
             2.0,
             Color::RED,
         )?;

@@ -128,6 +128,7 @@ impl HexGrid {
             for j in i {
                 if j.is_inside(pos) && j.display == None {
                     j.marked ^= true;
+                    return;
                 }
             }
         }
@@ -191,6 +192,7 @@ impl HexGrid {
 #[cfg(test)]
 mod tests {
     use crate::HexGrid;
+    use glam::Vec2;
 
     // TEST tile_number
     #[test]
@@ -384,5 +386,44 @@ mod tests {
         let mut grid = HexGrid::new(10, 10, 10);
         grid.grid[0][1].mine = true;
         assert_eq!(grid.count_mines(1, 1), 1);
+    }
+
+    // TEST gen_mines
+    #[test]
+    fn gen_mines0() {
+        for _ in 0..100 {
+            let mut grid = HexGrid::new(10, 10, 10);
+            assert!(!grid.mines_loaded);
+
+            grid.gen_mines(Vec2::new(80.0, 120.0));
+            let mut cnt = 0;
+            for i in &grid.grid {
+                for j in i {
+                    cnt += j.mine as usize;
+                }
+            }
+            assert!(grid.mines_loaded);
+            assert_eq!(cnt, 10);
+            assert!(!grid.grid[1][2].mine);
+        }
+    }
+
+    #[test]
+    fn gen_mines1() {
+        for _ in 0..100 {
+            let mut grid = HexGrid::new(42, 42, 42);
+            assert!(!grid.mines_loaded);
+
+            grid.gen_mines(Vec2::new(200.0, 160.0));
+            let mut cnt = 0;
+            for i in &grid.grid {
+                for j in i {
+                    cnt += j.mine as usize;
+                }
+            }
+            assert!(grid.mines_loaded);
+            assert_eq!(cnt, 42);
+            assert!(!grid.grid[3][3].mine);
+        }
     }
 }
