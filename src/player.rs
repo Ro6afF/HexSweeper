@@ -12,18 +12,26 @@ use glam::Vec2;
 pub struct Player {
     pub color: Color,
     pub name: String,
+    txt: Text,
 }
 
 impl Player {
     pub fn new(color: Color, name: String) -> Self {
-        Self { color, name }
+        let txt = Text::new(TextFragment {
+            text: String::from(&name) + " - " + &100.to_string(),
+            color: Some(Color::BLACK),
+            font: Some(graphics::Font::default()),
+            scale: Some(PxScale::from(30.0)),
+            ..Default::default()
+        });
+        Self { color, name, txt }
     }
 
     fn draw(&self, ctx: &mut Context, pos: Vec2, score: usize) -> GameResult {
         let rect = graphics::Mesh::new_rectangle(
             ctx,
             DrawMode::fill(),
-            Rect::new(0.0, 0.0, 300.0, 100.0),
+            Rect::new(0.0, 0.0, self.txt.width(ctx) + 60.0, 100.0),
             self.color,
         )?;
         graphics::draw(ctx, &rect, (pos,))?;
@@ -48,7 +56,7 @@ impl Player {
         let cover = graphics::Mesh::new_rectangle(
             ctx,
             DrawMode::fill(),
-            Rect::new(0.0, 0.0, 300.0, 100.0),
+            Rect::new(0.0, 0.0, self.txt.width(ctx) + 60.0, 100.0),
             Color::new(0.0, 0.0, 0.0, 0.9),
         )?;
         graphics::draw(ctx, &cover, (pos,))
@@ -59,7 +67,7 @@ impl Player {
 
         let line = graphics::Mesh::new_line(
             ctx,
-            &vec![Vec2::new(0.0, 0.0), Vec2::new(300.0, 100.0)],
+            &vec![Vec2::new(0.0, 0.0), Vec2::new(self.txt.width(ctx) + 60.0, 100.0)],
             2.0,
             Color::RED,
         )?;

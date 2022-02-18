@@ -45,30 +45,40 @@ impl event::EventHandler<ggez::GameError> for MainState {
             cnt_revealed += Rc::strong_count(&i) - 1;
         }
 
-        if self.players_alive > 0 && cnt_revealed < self.grid.tile_number() - self.grid.mine_number() {
-            self.grid.draw(ctx)?;
+        self.grid.draw(ctx)?;
+        if self.players_alive > 0
+            && cnt_revealed < self.grid.tile_number() - self.grid.mine_number()
+        {
             for i in 0..self.players.len() {
                 if i < self.players_alive {
                     if i == self.curr_player {
                         self.players[i].draw_active(
                             ctx,
-                            Vec2::new(600 as f32, (i * 100) as f32),
+                            Vec2::new(600 as f32, (i * 100) as f32 + 10.0),
                             Rc::strong_count(&self.players[i]) - 1,
                         )?;
                     } else {
                         self.players[i].draw_inactive(
                             ctx,
-                            Vec2::new(600 as f32, (i * 100) as f32),
+                            Vec2::new(600 as f32, (i * 100) as f32 + 10.0),
                             Rc::strong_count(&self.players[i]) - 1,
                         )?;
                     }
                 } else {
                     self.players[i].draw_dead(
                         ctx,
-                        Vec2::new(600 as f32, (i * 100) as f32),
+                        Vec2::new(600 as f32, (i * 100) as f32 + 10.0),
                         Rc::strong_count(&self.players[i]) - 1,
                     )?;
                 }
+            }
+        } else {
+            for i in 0..self.players.len() {
+                self.players[i].draw_active(
+                    ctx,
+                    Vec2::new(600 as f32, (i * 100) as f32 + 10.0),
+                    Rc::strong_count(&self.players[i]) - 1,
+                )?;
             }
         }
         graphics::present(ctx)?;
@@ -76,27 +86,37 @@ impl event::EventHandler<ggez::GameError> for MainState {
     }
 
     fn mouse_button_up_event(&mut self, _ctx: &mut Context, button: MouseButton, x: f32, y: f32) {
-        if self.players_alive == 0 {
-            return;
+        let mut cnt_revealed = 0;
+        for i in &self.players {
+            cnt_revealed += Rc::strong_count(&i) - 1;
         }
-        if button == MouseButton::Left {
-            match self.grid.click(
-                Vec2::new(x, y),
-                &self.players,
-                self.players_alive,
-                &mut self.curr_player,
-            ) {
-                ClickResult::Mine => {
-                    self.players_alive -= 1;
-                    self.players.swap(self.players_alive, self.curr_player);
-                    if self.players_alive > 0 {
-                        self.curr_player %= self.players_alive;
+
+        if self.players_alive > 0
+            && cnt_revealed < self.grid.tile_number() - self.grid.mine_number()
+        {
+            if button == MouseButton::Left {
+                match self.grid.click(
+                    Vec2::new(x, y),
+                    &self.players,
+                    self.players_alive,
+                    &mut self.curr_player,
+                ) {
+                    ClickResult::Mine => {
+                        self.players_alive -= 1;
+                        let mut i = self.curr_player;
+                        while i < self.players_alive {
+                            self.players.swap(i, i + 1);
+                            i += 1;
+                        }
+                        if self.players_alive > 0 {
+                            self.curr_player %= self.players_alive;
+                        }
                     }
+                    _ => {}
                 }
-                _ => {}
+            } else {
+                self.grid.mark(Vec2::new(x, y));
             }
-        } else {
-            self.grid.mark(Vec2::new(x, y));
         }
     }
 }
@@ -104,7 +124,7 @@ impl event::EventHandler<ggez::GameError> for MainState {
 pub fn main() -> GameResult {
     let cb = ggez::ContextBuilder::new("hexsweeper", "Dimo")
         .window_setup(ggez::conf::WindowSetup::default().title("Hexsweeper"))
-        .window_mode(ggez::conf::WindowMode::default().dimensions(1024.0, 768.0));
+        .window_mode(ggez::conf::WindowMode::default().dimensions(900.0, 500.0));
     let (ctx, event_loop) = cb.build()?;
     let state = MainState::new()?;
     event::run(ctx, event_loop, state)
