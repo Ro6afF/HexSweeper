@@ -426,4 +426,22 @@ mod tests {
             assert!(!grid.grid[3][3].mine);
         }
     }
+
+    // TEST mark
+    #[test]
+    fn mark0() {
+        let mut grid = HexGrid::new(42, 42, 42);
+        grid.mark(Vec2::new(200.0, 160.0));
+        assert!(grid.grid[3][3].marked);
+        grid.mark(Vec2::new(200.0, 160.0));
+        assert!(!grid.grid[3][3].marked);
+    }
+
+    #[test]
+    fn mark1() {
+        let mut grid = HexGrid::new(42, 42, 42);
+        grid.grid[3][3].display = Some(3);
+        grid.mark(Vec2::new(200.0, 160.0));
+        assert!(!grid.grid[3][3].marked);
+    }
 }

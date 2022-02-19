@@ -2,6 +2,9 @@ use crate::event::MouseButton;
 use ggez::event;
 use ggez::graphics;
 use ggez::graphics::Color;
+use ggez::graphics::PxScale;
+use ggez::graphics::Text;
+use ggez::graphics::TextFragment;
 use ggez::{Context, GameResult};
 use glam::*;
 use hex_sweeper::ClickResult;
@@ -80,6 +83,21 @@ impl event::EventHandler<ggez::GameError> for MainState {
                     Rc::strong_count(&self.players[i]) - 1,
                 )?;
             }
+            let txt = Text::new(TextFragment {
+                text: String::from("Game Over!"),
+                color: Some(Color::RED),
+                font: Some(graphics::Font::default()),
+                scale: Some(PxScale::from(50.0)),
+                ..Default::default()
+            });
+            graphics::draw(
+                ctx,
+                &txt,
+                (Vec2::new(
+                    610 as f32,
+                    (self.players.len() * 100) as f32 + 40.0,
+                ),),
+            )?;
         }
         graphics::present(ctx)?;
         Ok(())
